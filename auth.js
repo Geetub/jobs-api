@@ -1,14 +1,9 @@
 const jwt = require("jsonwebtoken");
+const storage = require('node-persist');
+const dbDir = 'db/users';
 const TOKEN_KEY = "SOME_KEY" // move to config
 
-var users =
-    [
-        { email: 'bob@gmail.com' },
-        { email: 'mike@gmail.com' },
-        { email: 'erik@gmail.com' },
-        { email: 'zelda@gmail.com' }
-    ]
-
+var users;
 
 async function login(req, res) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -25,20 +20,40 @@ async function login(req, res) {
             // Create token
             const token = jwt.sign(
                 { user_id: user._id, email },
-                'SOME_KEY',
-                {
-                    expiresIn: "2h",
-                }
+                TOKEN_KEY,
+                { expiresIn: "2h" }
             );
 
             // save user token
-            user.token = token;
+            result = {token: token};
 
             // user
-            res.status(200).json(user);
+            res.status(200).json(result);
         } else {
             res.status(400).send("Invalid Credentials");
         }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+async function register(req, res) {
+    res.header("Access-Control-Allow-Origin", "*");
+    try {
+        const { email, password } = req.body;
+
+        if (!(email && password)) {
+            res.status(400).send("Missing input");
+        }
+
+        const user = await users.find(u => u.email == email);
+        // if (user && (await bcrypt.compare(password, user.password))) 
+        if (user) {
+            return res.status(400).send("Username is already taken");
+        }
+
+        users.push( { email: email, password: password}  );
+        res.status(200).send("Signup Successful");        
     } catch (err) {
         console.log(err);
     }
@@ -59,5 +74,13 @@ const verifyToken = (req, res, next) => {
     return next();
   };
 
+  async function init_auth() {
+	users_storage = await storage.create({dir : dbDir});
+	await users_storage.init();
+	users = await users_storage.values();
+    console.log(users);
+}
+
+init_auth();
 module.exports.login = login;
 module.exports.verifyToken = verifyToken;

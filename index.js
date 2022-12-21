@@ -59,6 +59,13 @@ fetch('http://localhost:3001/login', {
 	headers: { 'Content-Type': 'application/json' }, 
 	body: JSON.stringify({email:"bob@gmail.com", password: "password"}) }).then(r => r.json()).then(t => res=t)	
 
+	fetch('http://localhost:3001/jobs', { 
+	method: 'POST', 
+	mode: 'cors', 
+	cache: 'no-cache',  
+	headers: { 'Content-Type': 'application/json' }, 
+	body: JSON.stringify({employer:"WeWork", title: "CEO"}) })
+	
 	fetch('http://localhost:3001/jobs', {
 	mode: 'cors', 
 	cache: 'no-cache',
